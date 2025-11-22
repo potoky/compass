@@ -1,5 +1,7 @@
 import dayjs, { Dayjs } from "dayjs";
 import "@testing-library/jest-dom";
+import { render, screen } from "@testing-library/react";
+import { WeekSection } from "@web/views/Calendar/components/Sidebar/SomedayTab/WeekSection/WeekSection";
 import {
   getSomedayWeekLabel,
   isCurrentWeek,
@@ -164,5 +166,39 @@ describe("getSomedayWeekLabel()", () => {
     const viewStart = dayjs("2028-02-26");
     const label = makeLabel(dayjs("2028-02-26"), dayjs("2028-03-03"));
     expect(getSomedayWeekLabel(label, viewStart, today)).toBe(label);
+  });
+});
+
+jest.mock("@web/views/Calendar/hooks/useToday", () => {
+  const dayjs = require("dayjs");
+  return {
+    useToday: () => ({ today: dayjs("2025-01-10") }),
+  };
+});
+
+jest.mock("../SomedayEvents/SomedayEvents", () => ({
+  SomedayEvents: () => <div data-testid="someday-events" />,
+}));
+
+describe("<WeekSection />", () => {
+  it("renders without crashing and shows the week label", () => {
+    const weekLabel = getSomedayWeekLabel(
+      "1.08 - 1.14",
+      dayjs("2025-01-08"),
+      dayjs("2025-01-10"),
+    );
+
+    render(
+      <WeekSection
+        dateCalcs={{} as any}
+        measurements={{} as any}
+        viewStart={dayjs("2025-01-08")}
+        weekLabel={weekLabel}
+        gridRefs={{ mainGridRef: { current: null } } as any}
+      />,
+    );
+
+    expect(screen.getByRole("heading")).toHaveTextContent("This Week");
+    expect(screen.getByTestId("someday-events")).toBeInTheDocument();
   });
 });
